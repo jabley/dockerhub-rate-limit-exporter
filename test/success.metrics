@@ -1,0 +1,12 @@
+# HELP dockerhub_exporter_poll_failures_total Number of errors while polling Docker Hub.
+# TYPE dockerhub_exporter_poll_failures_total counter
+dockerhub_exporter_poll_failures_total 0
+# HELP dockerhub_exporter_scrapes_total Current total Docker Hub scrapes.
+# TYPE dockerhub_exporter_scrapes_total counter
+dockerhub_exporter_scrapes_total 1
+# HELP dockerhub_limit_max_requests_total Docker Hub Rate Limit Maximum Requests
+# TYPE dockerhub_limit_max_requests_total gauge
+dockerhub_limit_max_requests_total 100
+# HELP dockerhub_limit_remaining_requests_total Docker Hub Rate Limit Remaining Requests
+# TYPE dockerhub_limit_remaining_requests_total gauge
+dockerhub_limit_remaining_requests_total 76

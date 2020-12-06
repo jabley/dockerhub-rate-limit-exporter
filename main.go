@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -131,6 +132,12 @@ func (e *Exporter) fetchRateLimit() (limit float64, remaining float64, err error
 
 	defer res.Body.Close()
 
+	limit, remaining, err = parseRateLimitHeaders(res)
+
+	return
+}
+
+func parseRateLimitHeaders(res *http.Response) (limit float64, remaining float64, err error) {
 	limit, err = parseFloat(res.Header.Get("RateLimit-Limit"))
 
 	if err != nil {
@@ -202,11 +209,15 @@ func (e *Exporter) fetchToken() (*string, error) {
 
 	defer r.Body.Close()
 
+	return e.parseTokenResponse(r.Body)
+}
+
+func (e *Exporter) parseTokenResponse(body io.ReadCloser) (*string, error) {
 	var token AuthTokenResponse
 
-	dec := json.NewDecoder(r.Body)
+	dec := json.NewDecoder(body)
 
-	if err = dec.Decode(&token); err != nil {
+	if err := dec.Decode(&token); err != nil {
 		return nil, err
 	}
 

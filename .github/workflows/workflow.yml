@@ -43,7 +43,12 @@ jobs:
     
     # Run testing on the code
     - name: Run testing
-      run: go test -v
+      run: go test -coverprofile=test.cover .
+    
+    - name: Publish code coverage
+      uses: paambaati/codeclimate-action@v2.7.4
+      env:
+        CC_TEST_REPORTER_ID: ${{ secrets.CODE_CLIMATE_TEST_REPORTER_ID }}
     
   # The "deploy" workflow
   buildx:

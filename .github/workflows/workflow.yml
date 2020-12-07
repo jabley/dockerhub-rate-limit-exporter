@@ -28,6 +28,8 @@ jobs:
       run: |
         go version
         go get -u golang.org/x/lint/golint
+        go mod download
+        go mod verify
         
     # Run build of the application
     - name: Run build

@@ -26,7 +26,6 @@ jobs:
     # Install all the dependencies
     - name: Install dependencies
       run: |
-        go version
         go get -u golang.org/x/lint/golint
         go mod download
         go mod verify
@@ -43,15 +42,17 @@ jobs:
     
     # Run testing on the code
     - name: Run testing
-      run: go test -coverprofile=test.cover .
+      run: go test -coverprofile=c.out ./...
     
     - name: Publish code coverage
       uses: paambaati/codeclimate-action@v2.7.4
       env:
         CC_TEST_REPORTER_ID: ${{ secrets.CODE_CLIMATE_TEST_REPORTER_ID }}
       with:
+        # This tool doesn't appear to work with Go modules?
+        prefix: github.com/jabley/dockerhub_exporter
         coverageLocations: |
-          ${{github.workspace}}/*.cover:gocov
+          ${{github.workspace}}/*.out:gocov
     
   # The "deploy" workflow
   buildx:

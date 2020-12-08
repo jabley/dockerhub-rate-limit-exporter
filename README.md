@@ -44,28 +44,29 @@ docker run -p 9101:9101 quay.io/jabley/dockerhub_exporter:v0.9.0
 ## Development
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/jabley/dockerhub_exporter)][goreportcard]
-[![Code Climate](https://codeclimate.com/github/jabley/dockerhub_exporter/badges/gpa.svg)][codeclimate]
+[![Maintainability](https://api.codeclimate.com/v1/badges/b24b9cae6fa76ce9a960/maintainability)][codeclimate]
 
 [goreportcard]: https://goreportcard.com/report/github.com/jabley/dockerhub_exporter
-[codeclimate]: https://codeclimate.com/github/jabley/dockerhub_exporter
+[codeclimate]: https://codeclimate.com/github/jabley/dockerhub_exporter/maintainability
 
 ### Building
 
 ```bash
-make build
+go build
 ```
 
 ### Testing
 
-[![Build Status](https://travis-ci.org/jabley/dockerhub_exporter_.png?branch=master)][travisci]
-[![CircleCI](https://circleci.com/gh/jabley/dockerhub_exporter/tree/master.svg?style=shield)][circleci]
+![Build Status](https://github.com/jabley/dockerhub_exporter/workflows/CICD/badge.svg)
+[![Test Coverage](https://api.codeclimate.com/v1/badges/b24b9cae6fa76ce9a960/test_coverage)](https://codeclimate.com/github/jabley/dockerhub_exporter/test_coverage)
 
 ```bash
-make test
+go test ./...
 ```
 
-[travisci]: https://travis-ci.org/jabley/dockerhub_exporter_
-[circleci]: https://circleci.com/gh/jabley/dockerhub_exporter_
+The test coverage number is interesting. Since this is (for now) a small service, it flags that all
+the `func main()` bit which parses command line args isn't tested. But if you look at the report,
+all of the service logic has good coverage.
 
 ## License
 

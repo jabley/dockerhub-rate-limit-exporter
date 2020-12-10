@@ -1,6 +1,10 @@
 FROM golang:alpine as builder
 LABEL maintainer="James Abley <james.abley@gmail.com>"
 
+# These are set by Docker buildx when we use the --platform arg
+ARG TARGETARCH
+ARG TARGETOS
+
 RUN apk add --no-cache git ca-certificates && update-ca-certificates
 RUN adduser \
 	--disabled-password \
@@ -14,7 +18,7 @@ RUN adduser \
 WORKDIR /src/
 COPY go.mod go.sum main.go ./
 RUN go mod download && go mod verify
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -installsuffix cgo -o dockerhub_exporter
+RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build -a -installsuffix cgo -o dockerhub_exporter
 
 FROM scratch
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/

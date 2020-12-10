@@ -38,7 +38,7 @@ dockerhub_exporter  -user=<user_name> -pass=<pass_phrase>
 To run the Docker Hub exporter as a Docker container, run:
 
 ```bash
-docker run -p 9101:9101 quay.io/jabley/dockerhub_exporter:v0.9.0
+docker run -p 9090:9090 quay.io/jabley/dockerhub_exporter:v0.9.0
 ```
 
 ## Development

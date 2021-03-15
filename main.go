@@ -77,7 +77,7 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 	e.mu.Lock() // To protect metrics from concurrent collects.
 	defer e.mu.Unlock()
 
-	e.scrape(ch)
+	e.scrape()
 
 	ch <- e.limit
 	ch <- e.remaining
@@ -96,7 +96,7 @@ func (e *Exporter) Describe(ch chan<- *prometheus.Desc) {
 	ch <- e.scrapeFailures.Desc()
 }
 
-func (e *Exporter) scrape(ch chan<- prometheus.Metric) {
+func (e *Exporter) scrape() {
 	e.totalScrapes.Inc()
 
 	rateLimit, remaining, err := e.fetchRateLimit()

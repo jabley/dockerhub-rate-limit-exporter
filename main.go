@@ -130,11 +130,15 @@ func (e *Exporter) fetchRateLimit() (limit float64, remaining float64, err error
 		return 0, 0, err
 	}
 
-	defer res.Body.Close()
+	defer closeResponse(res.Body)
 
 	limit, remaining, err = parseRateLimitHeaders(res)
 
 	return
+}
+
+func closeResponse(body io.ReadCloser) {
+	_ = body.Close()
 }
 
 func parseRateLimitHeaders(res *http.Response) (limit float64, remaining float64, err error) {
@@ -207,7 +211,7 @@ func (e *Exporter) fetchToken() (*string, error) {
 		return nil, err
 	}
 
-	defer r.Body.Close()
+	defer closeResponse(r.Body)
 
 	return e.parseTokenResponse(r.Body)
 }
@@ -234,7 +238,7 @@ func fetchHTTP(req *http.Request) (*http.Response, error) {
 	}
 
 	if !(resp.StatusCode >= 200 && resp.StatusCode < 300) {
-		resp.Body.Close()
+		closeResponse(resp.Body)
 		return nil, fmt.Errorf("HTTP status %d", resp.StatusCode)
 	}
 

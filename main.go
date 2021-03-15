@@ -283,8 +283,8 @@ func main() {
 
 func parseAndVerifyArgs() *arguments {
 	var (
-		help    bool
-		version bool
+		help        bool
+		showVersion bool
 
 		username   string
 		passphrase string
@@ -295,7 +295,7 @@ func parseAndVerifyArgs() *arguments {
 	flag.StringVar(&res.metricsPath, "path", "/metrics", "Path to expose metrics on")
 	flag.StringVar(&username, "user", "", "Optional username to authenticate with")
 	flag.StringVar(&passphrase, "pass", "", "Optional passphrase to authenticate with")
-	flag.BoolVar(&version, "version", false, "Display version and exit")
+	flag.BoolVar(&showVersion, "version", false, "Display version and exit")
 	flag.BoolVar(&help, "h", false, "Display this help message")
 	flag.BoolVar(&help, "help", false, "Display this help message")
 
@@ -312,7 +312,7 @@ func parseAndVerifyArgs() *arguments {
 		os.Exit(1)
 	}
 
-	if version {
+	if showVersion {
 		fmt.Printf("%s\n", os.Args[0])
 		os.Exit(1)
 	}

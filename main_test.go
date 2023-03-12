@@ -88,7 +88,7 @@ func writeResponse(w http.ResponseWriter, r *http.Request, response *mockRespons
 		}
 	}
 
-	w.Write(response.response)
+	_, _ = w.Write(response.response)
 }
 
 func expectMetrics(t *testing.T, c prometheus.Collector, fixture string) {

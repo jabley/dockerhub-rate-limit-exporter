@@ -26,7 +26,6 @@ jobs:
     # Install all the dependencies
     - name: Install dependencies
       run: |
-        go get -u golang.org/x/lint/golint
         go mod download
         go mod verify
         
@@ -34,12 +33,10 @@ jobs:
     - name: Run build
       run: go build . 
       
-    # Run vet & lint on the code
-    - name: Run vet & lint
-      run: |
-        go vet .
-        golint .
-    
+    # Run linters on the code
+    - name: golangci-lint
+      uses: golangci/golangci-lint-action@v3
+
     # Run testing on the code
     - name: Run testing
       run: go test -coverprofile=c.out ./...

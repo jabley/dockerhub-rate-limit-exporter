@@ -266,7 +266,7 @@ func main() {
 
 	http.Handle(args.metricsPath, promhttp.Handler())
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte(`<html>
+		_, _ = w.Write([]byte(`<html>
              <head><title>Docker Hub Exporter</title></head>
              <body>
              <h1>Docker Hub Exporter</h1>
@@ -276,7 +276,7 @@ func main() {
 	})
 
 	if err := http.ListenAndServe(":"+args.port, nil); err != nil {
-		fmt.Printf("Error starting HTTP server: %v", err)
+		_, _ = fmt.Printf("Error starting HTTP server: %v", err)
 		os.Exit(1)
 	}
 }
@@ -301,7 +301,7 @@ func parseAndVerifyArgs() *arguments {
 
 	flag.Usage = func() {
 		basename := filepath.Base(os.Args[0])
-		fmt.Printf("Usage: %s\n", basename)
+		_, _ = fmt.Printf("Usage: %s\n", basename)
 		flag.PrintDefaults()
 	}
 
@@ -313,7 +313,7 @@ func parseAndVerifyArgs() *arguments {
 	}
 
 	if showVersion {
-		fmt.Printf("%s\n", os.Args[0])
+		_, _ = fmt.Printf("%s\n", os.Args[0])
 		os.Exit(1)
 	}
 

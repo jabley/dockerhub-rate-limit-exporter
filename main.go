@@ -35,7 +35,9 @@ type Exporter struct {
 	clock func() time.Time
 
 	totalScrapes, scrapeFailures prometheus.Counter
-	remaining, limit             prometheus.Gauge
+	remaining, limit             float64
+	sourceIP                     string
+	limitDesc, remainingDesc     *prometheus.Desc
 	authToken                    *AuthTokenResponse
 }
 
@@ -58,16 +60,14 @@ func NewExporter(authServerURL string, rateLimitURL string, credentials *credent
 			Name:      "exporter_poll_failures_total",
 			Help:      "Number of errors while polling Docker Hub.",
 		}),
-		remaining: prometheus.NewGauge(prometheus.GaugeOpts{
-			Namespace: namespace,
-			Name:      "limit_remaining_requests_total",
-			Help:      "Docker Hub Rate Limit Remaining Requests",
-		}),
-		limit: prometheus.NewGauge(prometheus.GaugeOpts{
-			Namespace: namespace,
-			Name:      "limit_max_requests_total",
-			Help:      "Docker Hub Rate Limit Maximum Requests",
-		}),
+		remainingDesc: prometheus.NewDesc("dockerhub_limit_remaining_requests_total",
+			"Docker Hub Rate Limit Remaining Requests",
+			[]string{"source_ip"},
+			nil),
+		limitDesc: prometheus.NewDesc("dockerhub_limit_max_requests_total",
+			"Docker Hub Rate Limit Maximum Requests",
+			[]string{"source_ip"},
+			nil),
 	}
 }
 
@@ -79,8 +79,8 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 
 	e.scrape()
 
-	ch <- e.limit
-	ch <- e.remaining
+	ch <- prometheus.MustNewConstMetric(e.limitDesc, prometheus.GaugeValue, e.limit, e.sourceIP)
+	ch <- prometheus.MustNewConstMetric(e.remainingDesc, prometheus.GaugeValue, e.remaining, e.sourceIP)
 
 	ch <- e.totalScrapes
 	ch <- e.scrapeFailures
@@ -89,8 +89,8 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 // Describe describes all the metrics ever exported by the Docker Hub exporter. It
 // implements prometheus.Collector.
 func (e *Exporter) Describe(ch chan<- *prometheus.Desc) {
-	ch <- e.limit.Desc()
-	ch <- e.remaining.Desc()
+	ch <- e.limitDesc
+	ch <- e.remainingDesc
 
 	ch <- e.totalScrapes.Desc()
 	ch <- e.scrapeFailures.Desc()
@@ -99,19 +99,20 @@ func (e *Exporter) Describe(ch chan<- *prometheus.Desc) {
 func (e *Exporter) scrape() {
 	e.totalScrapes.Inc()
 
-	rateLimit, remaining, err := e.fetchRateLimit()
+	rateLimit, remaining, sourceIP, err := e.fetchRateLimit()
 
 	if err != nil {
-		fmt.Printf("%+v\n", err)
+		fmt.Fprintf(os.Stderr, "%+v\n", err)
 		e.scrapeFailures.Inc()
 		return
 	}
 
-	e.limit.Set(rateLimit)
-	e.remaining.Set(remaining)
+	e.limit = rateLimit
+	e.remaining = remaining
+	e.sourceIP = sourceIP
 }
 
-func (e *Exporter) fetchRateLimit() (limit float64, remaining float64, err error) {
+func (e *Exporter) fetchRateLimit() (limit float64, remaining float64, sourceIP string, err error) {
 	token, err := e.fetchToken()
 
 	if err != nil {
@@ -120,19 +121,19 @@ func (e *Exporter) fetchRateLimit() (limit float64, remaining float64, err error
 
 	req, err := http.NewRequest("HEAD", e.rateLimitURL, nil)
 	if err != nil {
-		return 0, 0, err
+		return 0, 0, "", err
 	}
 
 	req.Header.Set("Authorization", "Bearer "+*token)
 	res, err := fetchHTTP(req)
 
 	if err != nil {
-		return 0, 0, err
+		return 0, 0, "", err
 	}
 
 	defer closeResponse(res.Body)
 
-	limit, remaining, err = parseRateLimitHeaders(res)
+	limit, remaining, sourceIP, err = parseRateLimitHeaders(res)
 
 	return
 }
@@ -141,7 +142,7 @@ func closeResponse(body io.ReadCloser) {
 	_ = body.Close()
 }
 
-func parseRateLimitHeaders(res *http.Response) (limit float64, remaining float64, err error) {
+func parseRateLimitHeaders(res *http.Response) (limit float64, remaining float64, sourceIp string, err error) {
 	limit, err = parseFloat(res.Header.Get("RateLimit-Limit"))
 
 	if err != nil {
@@ -149,6 +150,12 @@ func parseRateLimitHeaders(res *http.Response) (limit float64, remaining float64
 	}
 
 	remaining, err = parseFloat(res.Header.Get("RateLimit-Remaining"))
+
+	if err != nil {
+		return
+	}
+
+	sourceIp = res.Header.Get("docker-ratelimit-source")
 
 	return
 }
@@ -259,8 +266,7 @@ func main() {
 	args := parseAndVerifyArgs()
 
 	exporter := NewExporter("https://auth.docker.io/token?service=registry.docker.io&scope=repository:ratelimitpreview/test:pull", "https://registry-1.docker.io/v2/ratelimitpreview/test/manifests/latest", args.credentials)
-	prometheus.MustRegister(exporter)
-	prometheus.MustRegister(version.NewCollector("dockerhub_exporter"))
+	prometheus.MustRegister(exporter, version.NewCollector("dockerhub_exporter"))
 
 	http.DefaultClient.Timeout = time.Second * 5
 
@@ -276,7 +282,7 @@ func main() {
 	})
 
 	if err := http.ListenAndServe(":"+args.port, nil); err != nil {
-		_, _ = fmt.Printf("Error starting HTTP server: %v", err)
+		_, _ = fmt.Fprintf(os.Stderr, "Error starting HTTP server: %v", err)
 		os.Exit(1)
 	}
 }

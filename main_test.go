@@ -109,14 +109,33 @@ func TestHappyPath(t *testing.T) {
 
 	rateLimitServer := httptest.NewServer(handler(&mockResponse{
 		headers: map[string][]string{
-			"RateLimit-Limit":     {"100;m21600"},
-			"RateLimit-Remaining": {"76;m21600"},
+			"RateLimit-Limit":         {"100;w=21600"},
+			"RateLimit-Remaining":     {"76;w=21600"},
+			"Docker-RateLimit-Source": {"127.0.0.1"},
 		},
 	}))
 	defer rateLimitServer.Close()
 
 	exporter := NewExporter(authServer.URL, rateLimitServer.URL, nil)
 	expectMetrics(t, exporter, "success.metrics")
+}
+
+func TestNoSourceHeaderIsHandled(t *testing.T) {
+	authServer := httptest.NewServer(handler(&mockResponse{
+		response: authResponseBody(),
+	}))
+	defer authServer.Close()
+
+	rateLimitServer := httptest.NewServer(handler(&mockResponse{
+		headers: map[string][]string{
+			"RateLimit-Limit":     {"100;w=21600"},
+			"RateLimit-Remaining": {"76;w=21600"},
+		},
+	}))
+	defer rateLimitServer.Close()
+
+	exporter := NewExporter(authServer.URL, rateLimitServer.URL, nil)
+	expectMetrics(t, exporter, "success-empty-sourceip.metrics")
 }
 
 func TestHappyPathWithBasicAuth(t *testing.T) {
@@ -127,8 +146,9 @@ func TestHappyPathWithBasicAuth(t *testing.T) {
 
 	rateLimitServer := httptest.NewServer(handler(&mockResponse{
 		headers: map[string][]string{
-			"RateLimit-Limit":     {"100;m21600"},
-			"RateLimit-Remaining": {"76;m21600"},
+			"RateLimit-Limit":         {"100;m21600"},
+			"RateLimit-Remaining":     {"76;m21600"},
+			"Docker-RateLimit-Source": {"127.0.0.1"},
 		},
 	}))
 	defer rateLimitServer.Close()
@@ -150,8 +170,9 @@ func TestAuthTokenIsReusedWhenStillValid(t *testing.T) {
 
 	rateLimitServer := httptest.NewServer(handler(&mockResponse{
 		headers: map[string][]string{
-			"RateLimit-Limit":     {"100;m21600"},
-			"RateLimit-Remaining": {"76;m21600"},
+			"RateLimit-Limit":         {"100;m21600"},
+			"RateLimit-Remaining":     {"76;m21600"},
+			"Docker-RateLimit-Source": {"127.0.0.1"},
 		},
 	}))
 	defer rateLimitServer.Close()
@@ -171,8 +192,9 @@ func TestUnableToAnonymouslyAuth(t *testing.T) {
 
 	rateLimitServer := httptest.NewServer(handler(&mockResponse{
 		headers: map[string][]string{
-			"RateLimit-Limit":     {"100;m21600"},
-			"RateLimit-Remaining": {"76;m21600"},
+			"RateLimit-Limit":         {"100;m21600"},
+			"RateLimit-Remaining":     {"76;m21600"},
+			"Docker-RateLimit-Source": {"127.0.0.1"},
 		},
 	}))
 	defer rateLimitServer.Close()
@@ -189,8 +211,9 @@ func TestUnableToBasicAuth(t *testing.T) {
 
 	rateLimitServer := httptest.NewServer(handler(&mockResponse{
 		headers: map[string][]string{
-			"RateLimit-Limit":     {"100;m21600"},
-			"RateLimit-Remaining": {"76;m21600"},
+			"RateLimit-Limit":         {"100;m21600"},
+			"RateLimit-Remaining":     {"76;m21600"},
+			"Docker-RateLimit-Source": {"127.0.0.1"},
 		},
 	}))
 	defer rateLimitServer.Close()
@@ -261,8 +284,9 @@ func TestBadJsonIsIgnored(t *testing.T) {
 
 	rateLimitServer := httptest.NewServer(handler(&mockResponse{
 		headers: map[string][]string{
-			"RateLimit-Limit":     {"100;m21600"},
-			"RateLimit-Remaining": {"76;m21600"},
+			"RateLimit-Limit":         {"100;m21600"},
+			"RateLimit-Remaining":     {"76;m21600"},
+			"Docker-RateLimit-Source": {"127.0.0.1"},
 		},
 	}))
 	defer rateLimitServer.Close()

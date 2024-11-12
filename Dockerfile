@@ -1,4 +1,4 @@
-FROM golang:alpine as builder
+FROM golang:alpine AS builder
 LABEL maintainer="James Abley <james.abley@gmail.com>"
 
 RUN apk add --no-cache git ca-certificates && update-ca-certificates

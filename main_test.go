@@ -77,7 +77,7 @@ func handler(response *mockResponse) http.HandlerFunc {
 	}
 }
 
-func writeResponse(w http.ResponseWriter, r *http.Request, response *mockResponse) {
+func writeResponse(w http.ResponseWriter, _ *http.Request, response *mockResponse) {
 	if response.status != nil {
 		w.WriteHeader(*response.status)
 	}
